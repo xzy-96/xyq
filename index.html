@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人口腔专属健康宣教工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    
+    <!-- 配置Tailwind自定义颜色和字体 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#f97316',
+                        accent: '#10b981',
+                        neutral: '#f3f4f6',
+                        'neutral-dark': '#6b7280',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .transition-height {
+                transition: max-height 0.3s ease-in-out;
+            }
+            .annotation-dot {
+                position: absolute;
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background-color: #ef4444;
+                transform: translate(-50%, -50%);
+                cursor: move;
+                box-shadow: 0 0 0 2px white, 0 0 0 4px #ef4444;
+            }
+            .annotation-line {
+                position: absolute;
+                background-color: #ef4444;
+                transform-origin: 0 0;
+                pointer-events: none;
+            }
+            .annotation-text {
+                position: absolute;
+                background-color: white;
+                padding: 4px 8px;
+                border: 1px solid #ef4444;
+                border-radius: 4px;
+                font-size: 12px;
+                max-width: 150px;
+                cursor: move;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm sticky top-0 z-50 transition-all duration-300">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-teeth text-2xl text-secondary"></i>
+                <h1 class="text-xl md:text-2xl font-bold text-primary">口腔健康宣教工具</h1>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <button id="saveBtn" class="bg-accent hover:bg-accent/90 text-white px-4 py-2 rounded-md flex items-center transition-all shadow-sm hover:shadow">
+                    <i class="fa fa-save mr-2"></i>保存
+                </button>
+                <button id="pdfBtn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md flex items-center transition-all shadow-sm hover:shadow">
+                    <i class="fa fa-file-pdf-o mr-2"></i>导出PDF
+                </button>
+                <button id="shareBtn" class="bg-secondary hover:bg-secondary/90 text-white px-4 py-2 rounded-md flex items-center transition-all shadow-sm hover:shadow">
+                    <i class="fa fa-share-alt mr-2"></i>分享
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- 患者信息区域 -->
+        <section class="bg-white rounded-xl shadow-sm p-5 mb-6 transform transition-all hover:shadow-md">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fa fa-user-md text-primary mr-2"></i>患者信息
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                    <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="请输入患者姓名">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">年龄</label>
+                    <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="请输入患者年龄">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">就诊日期</label>
+                    <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">联系电话</label>
+                    <input type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="请输入联系电话">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">医生</label>
+                    <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="主治医生">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">病历号</label>
+                    <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" placeholder="患者病历号">
+                </div>
+            </div>
+        </section>
+
+        <!-- 口腔照片及标注区域 -->
+        <section class="bg-white rounded-xl shadow-sm p-5 mb-6 transform transition-all hover:shadow-md">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fa fa-camera text-primary mr-2"></i>口腔照片及标注
+            </h2>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">上传口腔照片</label>
+                <div class="flex items-center space-x-4">
+                    <div class="relative border-2 border-dashed border-gray-300 rounded-lg w-full h-64 md:h-80 flex items-center justify-center overflow-hidden bg-neutral group">
+                        <input type="file" id="imageUpload" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                        <div id="uploadPlaceholder" class="text-center p-4 transition-all">
+                            <i class="fa fa-cloud-upload text-4xl text-gray-400 mb-2 group-hover:text-primary transition-colors"></i>
+                            <p class="text-gray-500">点击或拖拽图片到此处上传</p>
+                            <p class="text-xs text-gray-400 mt-1">支持JPG、PNG格式</p>
+                        </div>
+                        <div id="imageContainer" class="absolute inset-0 hidden">
+                            <img id="previewImage" src="" alt="口腔照片" class="w-full h-full object-contain">
+                            <div id="annotationsLayer" class="absolute inset-0 pointer-events-none"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col space-y-2 w-48">
+                        <button id="addAnnotation" class="bg-primary hover:bg-primary/90 text-white px-3 py-2 rounded-md flex items-center justify-center transition-all shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="fa fa-plus-circle mr-2"></i>添加标注
+                        </button>
+                        <button id="clearAnnotations" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-md flex items-center justify-center transition-all shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="fa fa-trash mr-2"></i>清除标注
+                        </button>
+                        <button id="rotateImage" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-md flex items-center justify-center transition-all shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="fa fa-rotate-right mr-2"></i>旋转图片
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="annotationNotes" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-2">标注说明</label>
+                <div id="notesContainer" class="space-y-3">
+                    <!-- 标注说明会动态添加到这里 -->
+                </div>
+                <button id="addNoteField" class="mt-2 text-primary hover:text-primary/80 text-sm flex items-center transition-colors">
+                    <i class="fa fa-plus-circle mr-1"></i> 添加说明
+                </button>
+            </div>
+        </section>
+
+        <!-- 牙周病介绍区域 -->
+        <section class="bg-white rounded-xl shadow-sm p-5 mb-6 transform transition-all hover:shadow-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                    <i class="fa fa-stethoscope text-primary mr-2"></i>牙周病介绍
+                </h2>
+                <button id="togglePeriodontal" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fa fa-chevron-up"></i>
+                </button>
+            </div>
+            
+            <div id="periodontalContent" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">定义</label>
+                    <div class="editable-content min-h-[60px] p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" contenteditable="true">
+                        牙周病是指发生在牙齿支持组织（牙龈、牙周膜、牙槽骨和牙骨质）的疾病，包括牙龈炎和牙周炎两大类。牙龈炎主要表现为牙龈红肿、出血，若不及时治疗，可发展为牙周炎，导致牙周袋形成、牙槽骨吸收，最终可能导致牙齿松动甚至脱落。
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">常见症状</label>
+                    <div class="editable-content min-h-[80px] p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" contenteditable="true">
+                        1. 刷牙时牙龈出血<br>
+                        2. 牙龈红肿、疼痛或萎缩<br>
+                        3. 口臭难以消除<br>
+                        4. 牙齿之间出现空隙<br>
+                        5. 牙齿松动或移位<br>
+                        6. 咀嚼时不适或疼痛
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">危害</label>
+                    <div class="editable-content min-h-[80px] p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" contenteditable="true">
+                        1. 影响咀嚼功能，导致消化不良<br>
+                        2. 可能引发心血管疾病、糖尿病等全身疾病<br>
+                        3. 影响美观和发音<br>
+                        4. 严重时导致牙齿丧失，影响生活质量<br>
+                        5. 增加老年痴呆风险
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">预防要点</label>
+                    <div class="editable-content min-h-[80px] p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" contenteditable="true">
+                        1. 每天至少刷牙两次，每次不少于2分钟<br>
+                        2. 每天使用牙线清洁牙间隙<br>
+                        3. 定期进行口腔检查和洁牙（建议每6个月一次）<br>
+                        4. 均衡饮食，补充维生素C等营养物质<br>
+                        5. 戒烟限酒，减少对牙周组织的刺激
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 其他牙齿问题区域 -->
+        <section class="bg-white rounded-xl shadow-sm p-5 mb-6 transform transition-all hover:shadow-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                    <i class="fa fa-tooth text-primary mr-2"></i>其他牙齿问题
+                </h2>
+                <button id="addToothIssue" class="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1 rounded-md text-sm flex items-center transition-all">
+                    <i class="fa fa-plus mr-1"></i> 添加问题
+                </button>
+            </div>
+            
+            <div id="toothIssuesContainer" class="space-y-4">
+                <div class="tooth-issue-item p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    <div class="flex justify-between items-start mb-2">
+                        <label class="block text-sm font-medium text-gray-700">问题描述</label>
+                        <button class="remove-issue text-gray-400 hover:text-red-500 transition-colors">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="editable-content min-h-[60px] p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" contenteditable="true">
+                        请描述其他牙齿问题，如龋齿、牙髓炎、牙齿敏感等。
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 洁牙后注意事项 -->
+        <section class="bg-white rounded-xl shadow-sm p-5 mb-6 transform transition-all hover:shadow-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                    <i class="fa fa-hand-holding-medical text-primary mr-2"></i>洁牙后注意事项
+                </h2>
+                <div class="flex space-x-2">
+                    <button id="addNoteItem" class="bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1 rounded-md text-sm flex items-center transition-all">
+                        <i class="fa fa-plus mr-1"></i> 添加项
+                    </button>
+                    <button id="toggleNotes" class="text-gray-500 hover:text-gray-700 transition-colors">
+                        <i class="fa fa-chevron-up"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="notesContent" class="space-y-3">
+                <div class="note-item flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-md transition-colors">
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm mt-0.5">1</span>
+                    <div class="editable-content flex-grow min-h-[40px] p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" contenteditable="true">
+                        洁牙后24小时内避免进食过冷、过热及辛辣刺激性食物。
+                    </div>
+                    <button class="remove-note self-center text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="note-item flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-md transition-colors">
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm mt-0.5">2</span>
+                    <div class="editable-content flex-grow min-h-[40px] p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" contenteditable="true">
+                        洁牙后当天不要用力吸吮，也不要用舌头舔舐或手指触摸牙龈。
+                    </div>
+                    <button class="remove-note self-center text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="note-item flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-md transition-colors">
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm mt-0.5">3</span>
+                    <div class="editable-content flex-grow min-h-[40px] p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" contenteditable="true">
+                        洁牙后短时间内可能出现牙齿敏感或轻微出血，属正常现象，一般会在1-2天内消失。
+                    </div>
+                    <button class="remove-note self-center text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="note-item flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-md transition-colors">
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm mt-0.5">4</span>
+                    <div class="editable-content flex-grow min-h-[40px] p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" contenteditable="true">
+                        洁牙后24小时内避免使用牙线，以免刺激牙龈。
+                    </div>
+                    <button class="remove-note self-center text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="note-item flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-md transition-colors">
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm mt-0.5">5</span>
+                    <div class="editable-content flex-grow min-h-[40px] p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" contenteditable="true">
+                        保持正常刷牙习惯，但动作要轻柔，避免刺激牙龈。
+                    </div>
+                    <button class="remove-note self-center text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="note-item flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-md transition-colors">
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm mt-0.5">6</span>
+                    <div class="editable-content flex-grow min-h-[40px] p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" contenteditable="true">
+                        若出现持续出血或严重不适，请及时联系医生。
+                    </div>
+                    <button class="remove-note self-center text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="note-item flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-md transition-colors">
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm mt-0.5">7</span>
+                    <div class="editable-content flex-grow min-h-[40px] p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" contenteditable="true">
+                        洁牙后1-2天内避免剧烈运动，以免加重牙龈不适。
+                    </div>
+                    <button class="remove-note self-center text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="note-item flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-md transition-colors">
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm mt-0.5">8</span>
+                    <div class="editable-content flex-grow min-h-[40px] p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" contenteditable="true">
+                        建议每6个月至1年进行一次口腔检查和洁牙，维护口腔健康。
+                    </div>
+                    <button class="remove-note self-center text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 正确刷牙方法 -->
+        <section class="bg-white rounded-xl shadow-sm p-5 mb-6 transform transition-all hover:shadow-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                    <i class="fa fa-brush text-primary mr-2"></i>正确刷牙方法
+                </h2>
+                <button id="toggleBrushing" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fa fa-chevron-up"></i>
+                </button>
+            </div>
+            
+            <div id="brushingContent" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-2">
+                    <div class="editable-content min-h-[200px] p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" contenteditable="true">
+                        <p><strong>巴氏刷牙法步骤：</strong></p>
+                        <p>1. 选择软毛牙刷，将牙刷与牙齿呈45度角，轻轻放置在牙龈边缘。</p>
+                        <p>2. 做小范围的圆弧状颤动，每次刷2-3颗牙，约10次左右。</p>
+                        <p>3. 清洁前牙内侧时，将牙刷竖直放置，用刷头前部上下动作清洁。</p>
+                        <p>4. 清洁咬合面时，水平来回轻轻刷动，注意清洁窝沟。</p>
+                        <p>5. 按顺序刷牙，确保每个区域都被清洁到，避免遗漏。</p>
+                        <p>6. 每次刷牙时间不少于2分钟，早晚各刷一次。</p>
+                        <p>7. 刷牙后用清水漱口，清洗牙刷并将其晾干。</p>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col items-center justify-center">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">刷牙教程二维码</label>
+                    <div class="relative border-2 border-dashed border-gray-300 rounded-lg w-full h-48 flex items-center justify-center overflow-hidden bg-neutral group">
+                        <input type="file" id="qrcodeUpload" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                        <div id="qrcodePlaceholder" class="text-center p-4 transition-all">
+                            <i class="fa fa-qrcode text-4xl text-gray-400 mb-2 group-hover:text-primary transition-colors"></i>
+                            <p class="text-gray-500">点击上传二维码图片</p>
+                            <p class="text-xs text-gray-400 mt-1">支持JPG、PNG格式</p>
+                        </div>
+                        <img id="qrcodeImage" src="" alt="刷牙教程二维码" class="hidden w-full h-full object-contain">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2 text-center">扫码查看正确刷牙方法视频教程</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <div class="flex items-center justify-center md:justify-start">
+                        <i class="fa fa-teeth text-2xl text-secondary mr-2"></i>
+                        <h2 class="text-xl font-bold">贝尔口腔</h2>
+                    </div>
+                    <p class="text-gray-400 text-sm mt-1 text-center md:text-left">专业口腔健康管理</p>
+                </div>
+                
+                <div class="text-center md:text-right">
+                    <p class="text-gray-400 text-sm">© 2023 贝尔口腔. 保留所有权利</p>
+                    <p class="text-gray-400 text-sm mt-1">联系电话: 400-123-4567</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 分享链接模态框 -->
+    <div id="shareModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-800">分享健康报告</h3>
+                <button id="closeShareModal" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">分享链接</label>
+                <div class="flex">
+                    <input type="text" id="shareLink" value="https://dental-health.example.com/report/abc123" class="flex-grow px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" readonly>
+                    <button id="copyLink" class="bg-primary hover:bg-primary/90 text-white px-3 py-2 rounded-r-md transition-all">
+                        <i class="fa fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">或者通过以下方式分享</label>
+                <div class="flex space-x-3 justify-center">
+                    <button class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white hover:bg-blue-600 transition-colors">
+                        <i class="fa fa-weixin"></i>
+                    </button>
+                    <button class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white hover:bg-green-600 transition-colors">
+                        <i class="fa fa-qq"></i>
+                    </button>
+                    <button class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white hover:bg-blue-700 transition-colors">
+                        <i class="fa fa-envelope"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <p class="text-xs text-gray-500">通过此链接可再次编辑内容</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 保存成功提示 -->
+    <div id="saveNotification" class="fixed bottom-4 right-4 bg-accent text-white px-4 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 flex items-center">
+        <i class="fa fa-check-circle mr-2"></i>
+        <span>内容已成功保存</span>
+    </div>
+
+    <!-- PDF导出提示 -->
+    <div id="pdfNotification" class="fixed bottom-4 right-4 bg-primary text-white px-4 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 flex items-center">
+        <i class="fa fa-file-pdf-o mr-2"></i>
+        <span>PDF已成功导出</span>
+    </div>
+
+    <!-- 贝尔口腔水印（导出PDF时可见） -->
+    <div id="watermark" class="fixed inset-0 pointer-events-none opacity-0 transition-opacity duration-300 flex items-center justify-center">
+        <div class="text-[120px] font-bold text-gray-300/30 transform rotate-[-45deg] whitespace-nowrap">
+            贝尔口腔
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const imageUpload = document.getElementById('imageUpload');
+            const previewImage = document.getElementById('previewImage');
+            const imageContainer = document.getElementById('imageContainer');
+            const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+            const annotationsLayer = document.getElementById('annotationsLayer');
+            const addAnnotationBtn = document.getElementById('addAnnotation');
+            const clearAnnotationsBtn = document.getElementById('clearAnnotations');
+            const rotateImageBtn = document.getElementById('rotateImage');
+            const annotationNotes = document.getElementById('annotationNotes');
+            const notesContainer = document.getElementById('notesContainer');
+            const addNoteFieldBtn = document.getElementById('addNoteField');
+            
+            const qrcodeUpload = document.getElementById('qrcodeUpload');
+            const qrcodeImage = document.getElementById('qrcodeImage');
+            const qrcodePlaceholder = document.getElementById('qrcodePlaceholder');
+            
+            const addToothIssueBtn = document.getElementById('addToothIssue');
+            const toothIssuesContainer = document.getElementById('toothIssuesContainer');
+            
+            const addNoteItemBtn = document.getElementById('addNoteItem');
+            const notesContent = document.getElementById('notesContent');
+            
+            const togglePeriodontalBtn = document.getElementById('togglePeriodontal');
+            const periodontalContent = document.getElementById('periodontalContent');
+            const toggleNotesBtn = document.getElementById('toggleNotes');
+            const toggleBrushingBtn = document.getElementById('toggleBrushing');
+            const brushingContent = document.getElementById('brushingContent');
+            
+            const saveBtn = document.getElementById('saveBtn');
+            const pdfBtn = document.getElementById('pdfBtn');
+            const shareBtn = document.getElementById('shareBtn');
+            const shareModal = document.getElementById('shareModal');
+            const closeShareModalBtn = document.getElementById('closeShareModal');
+            const copyLinkBtn = document.getElementById('copyLink');
+            const shareLinkInput = document.getElementById('shareLink');
+            
+            const saveNotification = document.getElementById('saveNotification');
+            const pdfNotification = document.getElementById('pdfNotification');
+            const watermark = document.getElementById('watermark');
+            
+            // 状态变量
+            let annotations = [];
+            let currentRotation = 0;
+            let isAddingAnnotation = false;
+            
+            // 上传口腔照片
+            imageUpload.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                        uploadPlaceholder.classList.add('hidden');
+                        imageContainer.classList.remove('hidden');
+                        
+                        // 启用标注按钮
+                        addAnnotationBtn.disabled = false;
+                        clearAnnotationsBtn.disabled = false;
+                        rotateImageBtn.disabled = false;
+                        annotationNotes.classList.remove('hidden');
+                        
+                        // 添加一个默认的标注说明框
+                        if (notesContainer.children.length === 0) {
+                            addNoteField();
+                        }
+                    }
+                    
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+            
+            // 上传二维码
+            qrcodeUpload.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        qrcodeImage.src = e.target.result;
+                        qrcodePlaceholder.classList.add('hidden');
+                        qrcodeImage.classList.remove('hidden');
+                    }
+                    
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+            
+            // 准备添加标注
+            addAnnotationBtn.addEventListener('click', function() {
+                isAddingAnnotation = true;
+                annotationsLayer.style.pointerEvents = 'auto';
+                addAnnotationBtn.textContent = '点击图片添加标注';
+                addAnnotationBtn.classList.add('bg-yellow-500');
+                addAnnotationBtn.classList.remove('bg-primary');
+            });
+            
+            // 在图片上添加标注
+            annotationsLayer.addEventListener('click', function(e) {
+                if (!isAddingAnnotation) return;
+                
+                const rect = annotationsLayer.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                // 创建标注点
+                const dot = document.createElement('div');
+                dot.className = 'annotation-dot';
+                dot.style.left = `${x}px`;
+                dot.style.top = `${y}px`;
+                dot.dataset.id = Date.now();
+                
+                // 创建连接线
+                const line = document.createElement('div');
+                line.className = 'annotation-line';
+                line.style.width = '50px';
+                line.style.height = '2px';
+                line.dataset.id = dot.dataset.id;
+                
+                // 创建标注文本框
+                const text = document.createElement('div');
+                text.className = 'annotation-text';
+                text.contentEditable = true;
+                text.textContent = '请输入标注内容';
+                text.style.left = `${x + 60}px`;
+                text.style.top = `${y}px`;
+                text.dataset.id = dot.dataset.id;
+                
+                // 添加到图层
+                annotationsLayer.appendChild(dot);
+                annotationsLayer.appendChild(line);
+                annotationsLayer.appendChild(text);
+                
+                // 计算线条角度
+                updateAnnotationLine(dot, text, line);
+                
+                // 保存到数组
+                annotations.push({
+                    id: dot.dataset.id,
+                    x, y,
+                    text: '请输入标注内容'
+                });
+                
+                // 添加到标注说明
+                addNoteField(text.textContent, dot.dataset.id);
+                
+                // 允许拖动标注
+                makeDraggable(dot, text, line);
+                
+                // 禁用添加模式
+                isAddingAnnotation = false;
+                annotationsLayer.style.pointerEvents = 'none';
+                addAnnotationBtn.innerHTML = '<i class="fa fa-plus-circle mr-2"></i>添加标注';
+                addAnnotationBtn.classList.remove('bg-yellow-500');
+                addAnnotationBtn.classList.add('bg-primary');
+                
+                // 自动聚焦到文本框
+                setTimeout(() => text.focus(), 100);
+                
+                // 监听文本变化
+                text.addEventListener('input', function() {
+                    const noteItem = document.querySelector(`.note-item[data-annotation-id="${dot.dataset.id}"] .editable-content`);
+                    if (noteItem) {
+                        noteItem.textContent = this.textContent;
+                    }
+                    
+                    // 更新标注数据
+                    const annotation = annotations.find(a => a.id === dot.dataset.id);
+                    if (annotation) {
+                        annotation.text = this.textContent;
+                    }
+                });
+            });
+            
+            // 清除所有标注
+            clearAnnotationsBtn.addEventListener('click', function() {
+                if (confirm('确定要清除所有标注吗？')) {
+                    annotationsLayer.innerHTML = '';
+                    notesContainer.innerHTML = '';
+                    annotations = [];
+                    addNoteField(); // 添加一个空的标注说明框
+                }
+            });
+            
+            // 旋转图片
+            rotateImageBtn.addEventListener('click', function() {
+                currentRotation = (currentRotation + 90) % 360;
+                previewImage.style.transform = `rotate(${currentRotation}deg)`;
+            });
+            
+            // 添加标注说明框
+            function addNoteField(text = '', annotationId = '') {
+                const noteItem = document.createElement('div');
+                noteItem.className = 'note-item flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-md transition-colors';
+                if (annotationId) {
+                    noteItem.dataset.annotationId = annotationId;
+                }
+                
+                const index = notesContainer.children.length + 1;
+                
+                noteItem.innerHTML = `
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-secondary text-white flex items-center justify-center text-sm mt-0.5">${index}</span>
+                    <div class="editable-content flex-grow min-h-[40px] p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary/50 focus:border-secondary transition-all" contenteditable="true">
+                        ${text || '请输入标注说明...'}
+                    </div>
+                    <button class="remove-note self-center text-gray-400 hover:text-red-500 transition-colors">
+                        <i class="fa fa-times"></i>
+                    </button>
+                `;
+                
+                notesContainer.appendChild(noteItem);
+                
+                // 更新序号
+                updateNoteNumbers();
+                
+                // 添加删除事件
+                const removeBtn = noteItem.querySelector('.remove-note');
+                removeBtn.addEventListener('click', function() {
+                    // 如果是关联到标注的说明，同时删除标注
+                    if (annotationId) {
+                        document.querySelectorAll(`[data-id="${annotationId}"]`).forEach(el => el.remove());
+                        annotations = annotations.filter(a => a.id !== annotationId);
+                    }
+                    
+                    noteItem.remove();
+                    updateNoteNumbers();
+                });
+                
+                // 如果有关联的标注，同步文本变化
+                const contentEl = noteItem.querySelector('.editable-content');
+                if (annotationId) {
+                    contentEl.addEventListener('input', function() {
+                        const annotationText = document.querySelector(`.annotation-text[data-id="${annotationId}"]`);
+                        if (annotationText) {
+                            annotationText.textContent = this.textContent;
+                            
+                            // 更新标注数据
+                            const annotation = annotations.find(a => a.id === annotationId);
+                            if (annotation) {
+                                annotation.text = this.textContent;
+                            }
+                        }
+                    });
+                }
+                
+                return noteItem;
+            }
+            
+            // 添加说明按钮
+            addNoteFieldBtn.addEventListener('click', function() {
+                addNoteField();
+            });
+            
+            // 更新说明序号
+            function updateNoteNumbers() {
+                const noteItems = notesContainer.querySelectorAll('.note-item');
+                noteItems.forEach((item, index) => {
+                    const numberSpan = item.querySelector('span');
+                    numberSpan.textContent = index + 1;
+                });
+            }
+            
+            // 使标注可拖动
+            function makeDraggable(dot, text, line) {
+                let isDragging = false;
+                let dragTarget = null;
+                let offsetX, offsetY;
+                
+                // 鼠标按下事件
+                [dot, text].forEach(el => {
+                    el.addEventListener('mousedown', function(e) {
+                        isDragging = true;
+                        dragTarget = el;
+                        const rect = el.getBoundingClientRect();
+                        offsetX = e.clientX - rect.left;
+                        offsetY = e.clientY - rect.top;
+                        el.style.zIndex = 10;
+                        document.body.style.cursor = 'grabbing';
+                        e.preventDefault();
+                    });
+                });
+                
+                // 鼠标移动事件
+                document.addEventListener('mousemove', function(e) {
+                    if (!isDragging) return;
+                    
+                    const rect = annotationsLayer.getBoundingClientRect();
+                    const x = e.clientX - rect.left - offsetX;
+                    const y = e.clientY - rect.top - offsetY;
+                    
+                    // 限制在容器内
+                    const maxX = rect.width - (dragTarget === dot ? 16 : 0);
+                    const maxY = rect.height - (dragTarget === dot ? 16 : 0);
+                    const constrainedX = Math.max(0, Math.min(x, maxX));
+                    const constrainedY = Math.max(0, Math.min(y, maxY));
+                    
+                    // 更新位置
+                    dragTarget.style.left = `${constrainedX}px`;
+                    dragTarget.style.top = `${constrainedY}px`;
+                    
+                    // 更新连接线
+                    updateAnnotationLine(dot, text, line);
+                    
+                    // 更新标注数据
+                    const annotation = annotations.find(a => a.id === dot.dataset.id);
+                    if (annotation) {
+                        if (dragTarget === dot) {
+                            annotation.x = constrainedX + 8; // 加上一半的宽度，因为有transform: translate(-50%, -50%)
+                            annotation.y = constrainedY + 8;
+                        }
+                        annotation.text = text.textContent;
+                    }
+                });
+                
+                // 鼠标释放事件
+                document.addEventListener('mouseup', function() {
+                    if (isDragging) {
+                        isDragging = false;
+                        dragTarget.style.zIndex = 1;
+                        document.body.style.cursor = '';
+                    }
+                });
+            }
+            
+            // 更新标注连接线
+            function updateAnnotationLine(dot, text, line) {
+                const dotRect = dot.getBoundingClientRect();
+                const textRect = text.getBoundingClientRect();
+                const layerRect = annotationsLayer.getBoundingClientRect();
+                
+                // 计算相对于图层的位置
+                const dotX = dotRect.left + dotRect.width/2 - layerRect.left;
+                const dotY = dotRect.top + dotRect.height/2 - layerRect.top;
+                const textX = textRect.left - layerRect.left;
+                const textY = textRect.top + textRect.height/2 - layerRect.top;
+                
+                // 计算距离和角度
+                const dx = textX - dotX;
+                const dy = textY - dotY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                // 设置线条
+                line.style.width = `${distance}px`;
+                line.style.left = `${dotX}px`;
+                line.style.top = `${dotY}px`;
+                line.style.transform = `rotate(${angle}deg)`;
+            }
+            
+            // 添加牙齿问题
+            addToothIssueBtn.addEventListener('click', function() {
+                const issueItem = document.createElement('div');
+                issueItem.className = 'tooth-issue-item p-4 border border-gray-200 rounded-lg bg-gray-50';
+                
+                issueItem.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <label class="block text-sm font-medium text-gray-700">问题描述</label>
+                        <button class="remove-issue text-gray-400 hover:text-red-500 transition-colors">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="editable-content min-h-[60px] p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" contenteditable="true">
+                        请描述牙齿问题...
+                    </div>
+                `;
+                
+                toothIssuesContainer.appendChild(issueItem);
+                
+                // 添加删除事件
+                const removeBtn = issueItem.querySelector('.remove-issue');
+                removeBtn.addEventListener('click', function() {
+                    issueItem.remove();
+                });
+            });
+            
+            // 添加注意事项项
+            addNoteItemBtn.addEventListener('click', function() {
+                const noteItems = notesContent.querySelectorAll('.note-item');
+                const newIndex = noteItems.length + 1;
+                
+                const noteItem = document.createElement('div');
+                noteItem.className = 'note-item flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-md transition-colors';
+                
+                noteItem.innerHTML = `
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm mt-0.5">${newIndex}</span>
+                    <div class="editable-content flex-grow min-h-[40px] p-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all" contenteditable="true">
+                        请输入注意事项...
+                    </div>
+                    <button class="remove-note self-center text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                        <i class="fa fa-times"></i>
+                    </button>
+                `;
+                
+                notesContent.appendChild(noteItem);
+                
+                // 更新序号
+                updateNotesNumbers();
+                
+                // 添加删除事件
+                const removeBtn = noteItem.querySelector('.remove-note');
+                removeBtn.addEventListener('click', function() {
+                    noteItem.remove();
+                    updateNotesNumbers();
+                });
+            });
+            
+            // 更新注意事项序号
+            function updateNotesNumbers() {
+                const noteItems = notesContent.querySelectorAll('.note-item');
+                noteItems.forEach((item, index) => {
+                    const numberSpan = item.querySelector('span');
+                    numberSpan.textContent = index + 1;
+                });
+            }
+            
+            // 初始设置删除按钮事件
+            document.querySelectorAll('.remove-note').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.closest('.note-item').remove();
+                    updateNotesNumbers();
+                });
+            });
+            
+            document.querySelectorAll('.remove-issue').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.closest('.tooth-issue-item').remove();
+                });
+            });
+            
+            // 折叠/展开功能
+            function setupToggle(toggleBtn, content) {
+                toggleBtn.addEventListener('click', function() {
+                    const icon = this.querySelector('i');
+                    if (content.classList.contains('hidden')) {
+                        content.classList.remove('hidden');
+                        icon.classList.remove('fa-chevron-down');
+                        icon.classList.add('fa-chevron-up');
+                    } else {
+                        content.classList.add('hidden');
+                        icon.classList.remove('fa-chevron-up');
+                        icon.classList.add('fa-chevron-down');
+                    }
+                });
+            }
+            
+            setupToggle(togglePeriodontalBtn, periodontalContent);
+            setupToggle(toggleNotesBtn, notesContent);
+            setupToggle(toggleBrushingBtn, brushingContent);
+            
+            // 保存功能
+            saveBtn.addEventListener('click', function() {
+                // 模拟保存操作
+                setTimeout(() => {
+                    // 显示保存成功提示
+                    saveNotification.classList.remove('translate-y-20', 'opacity-0');
+                    
+                    // 3秒后隐藏提示
+                    setTimeout(() => {
+                        saveNotification.classList.add('translate-y-20', 'opacity-0');
+                    }, 3000);
+                }, 800);
+            });
+            
+            // 导出PDF功能
+            pdfBtn.addEventListener('click', function() {
+                // 显示水印
+                watermark.classList.remove('opacity-0');
+                
+                // 配置PDF选项
+                const opt = {
+                    margin: 10,
+                    filename: '口腔健康报告.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                
+                // 选择要导出的内容
+                const element = document.querySelector('main');
+                
+                // 生成PDF
+                html2pdf().from(element).set(opt).save().then(() => {
+                    // 隐藏水印
+                    watermark.classList.add('opacity-0');
+                    
+                    // 显示PDF导出成功提示
+                    pdfNotification.classList.remove('translate-y-20', 'opacity-0');
+                    
+                    // 3秒后隐藏提示
+                    setTimeout(() => {
+                        pdfNotification.classList.add('translate-y-20', 'opacity-0');
+                    }, 3000);
+                });
+            });
+            
+            // 分享功能
+            shareBtn.addEventListener('click', function() {
+                shareModal.classList.remove('hidden');
+                // 触发动画
+                setTimeout(() => {
+                    shareModal.classList.remove('opacity-0');
+                    shareModal.querySelector('div').classList.remove('scale-95');
+                    shareModal.querySelector('div').classList.add('scale-100');
+                }, 10);
+            });
+            
+            closeShareModalBtn.addEventListener('click', function() {
+                shareModal.classList.add('opacity-0');
+                shareModal.querySelector('div').classList.remove('scale-100');
+                shareModal.querySelector('div').classList.add('scale-95');
+                setTimeout(() => {
+                    shareModal.classList.add('hidden');
+                }, 300);
+            });
+            
+            // 点击模态框外部关闭
+            shareModal.addEventListener('click', function(e) {
+                if (e.target === shareModal) {
+                    closeShareModalBtn.click();
+                }
+            });
+            
+            // 复制链接
+            copyLinkBtn.addEventListener('click', function() {
+                shareLinkInput.select();
+                document.execCommand('copy');
+                
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fa fa-check"></i>';
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                }, 2000);
+            });
+            
+            // 导航栏滚动效果
+            window.addEventListener('scroll', function() {
+                const header = document.querySelector('header');
+                if (window.scrollY > 10) {
+                    header.classList.add('shadow');
+                    header.classList.remove('shadow-sm');
+                } else {
+                    header.classList.remove('shadow');
+                    header.classList.add('shadow-sm');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
